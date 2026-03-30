@@ -1,10 +1,4 @@
-# Objectives
-
-- Identify pain points in existing applications
-- To utilize API endpoints in React components
-- To learn to build a series of interconnected React components that improve the user experience
-
-# Lab 11: Choretracker UX Improvements with React
+# Lab 11: ChoreTracker UX Improvements with React
 
 As seen in lecture, we can leverage the React to allow for cool, dynamic effects on the front-end of our application. Part of the reason we may wish to use something like this would be to improve the user experience (or UX for short) of an application. Nowadays, the demand for real-time updates is higher than ever. We want to complete everything in a short of a time as we possibly can. React supports this outlook onto completing tasks.
 
@@ -16,15 +10,23 @@ First thing is that we have to have npm (node package manager) and yarn set up o
 
 Once you have npm, you will need yarn. Again, you may already have yarn and can check with the command, `yarn -v`. If needed, you can install yarn with the command `npm install --global yarn`. Verify it's installed with the command `yarn -v`
 
-For this lab, we are going to implement several features using React into Chore Tracker from before. We've provided starter code here for your convinience.
+For this lab, we are going to implement several features using React into Chore Tracker from before. We've provided starter code here for your convenience.
 
 1. Clone the [starter code repository](https://github.com/67272-App-Design-Dev/ChoreTrackerReactStarter). _Be sure to remove any remote connections on the repository with_ `git remote rm origin`. As always, move off the 'main' branch to a development branch (i.e., `git checkout -b dev`) and only save work back to main when it's good to go.
 
-1. In your gemfile, we have added two new gems:
+   After cloning, install the Ruby and JavaScript dependencies before doing anything else:
+
+   ```bash
+   bundle install
+   yarn install
+   ```
+
+1. In your Gemfile, we have updated gems for Rails 8.1.1 compatibility:
 
    ```ruby
-   gem "shakapacker", "= 6.5"
-   gem "react-rails", "= 2.6"
+   gem "shakapacker", "~> 8.0"
+   gem "react-rails", "~> 3.2"
+   gem "sassc-rails"     # Sprockets-compatible Sass processor (required for .scss assets)
    ```
 
    These gems will make it easy for us to integrate React into an already existing Rails app. Going to the [react-rails](https://github.com/reactjs/react-rails) gem repo will bring up some of the documentation with this gem and could be a helpful reference.
@@ -32,7 +34,7 @@ For this lab, we are going to implement several features using React into Chore 
 1. In order to speed up the lab, we have done some important setup steps for you in advance. This is for information purposes, and **does not have to be repeated now.** (_Here for educational purposes only_)
 
    ```bash
-   rails webpacker:install
+   rails shakapacker:install
 
    yarn add react react-dom @babel/preset-react prop-types \
      css-loader style-loader mini-css-extract-plugin css-minimizer-webpack-plugin
@@ -51,11 +53,11 @@ For this lab, we are going to implement several features using React into Chore 
      },
 
      "dependencies": {
-         "react_ujs": "https://github.com/67272-App-Design-Dev/react-rails/",
+         "react_ujs": "react_ujs",
      }
    ```
 
-   We also modified 'config/webpacker.yml' and changed the `source_entry_path` to:
+   We also modified `config/shakapacker.yml` and changed the `source_entry_path` to:
 
    ```yml
    source_entry_path: packs
@@ -75,7 +77,7 @@ For this lab, we are going to implement several features using React into Chore 
    rails g react:component HelloWorld greeting:string
    ```
 
-   The react-rails gem is generating a very basic component which has a prop called `greeting` and will display it. Your component should be now created under the `app/javascript/components/` directory (verify that now and look at the component generated). One thing to notice that is a little different from class is that the component explicitly calls the fragment using `<React.Fragment>` whereas in class, we used the common shortcut `<>`.
+   The react-rails gem is generating a very basic component which has a prop called `greeting` and will display it. Your component should be now created under the `app/javascript/components/` directory (verify that now and look at the component generated). Note that react-rails 3.2 generates **functional components** by default — you do not need to convert anything. The component explicitly calls the fragment using `<React.Fragment>` rather than the shortcut `<>`.
 
    Now to actually include the component in your views go to `app/views/chores/index.html.erb` and after the comment put
 
@@ -83,7 +85,7 @@ For this lab, we are going to implement several features using React into Chore 
    <%= react_component("HelloWorld", { greeting: "Hello from react-rails." }) %>
    ```
 
-   Run `rails db:contexts` to set up the database and populate it with some testing data. After that, start the server.
+   Run `rails db:migrate` to set up the database and then `rake db:contexts` to populate it with some testing data. After that, start the server with `bin/rails server` (or `bin/dev` if using Procfile.dev).
 
    You should now see the component rendered before you. If not, please see a TA/CA for assistance.
 
@@ -160,11 +162,11 @@ To make this happen, start with the following:
    end
    ```
 
-   And don't forget to add a route in the appropriate place. (We aren't telling you how to do this; you should know it by now and this was just a friendly reminder.) Run the server and verify the route is giving you the appropriate json before proceeding further.
+   And don't forget to add a route in the appropriate place — specifically **inside the `namespace :v1` block** in `config/routes.rb`. (We aren't telling you how to do this; you should know it by now and this was just a friendly reminder.) Run the server and verify the route is giving you the appropriate json before proceeding further.
 
-1. Now that we have data for chores in json format, we need to use that to populate our page. First, as a bit of cleanup, we are going to replace the older notation of `class Chores extends React.Component` with just `function Chores()` and also get rid of the line `render () {` and its corresponding curly brace.
+1. Now that we have data for chores in json format, we need to use that to populate our page. _(Note: react-rails 3.2 already generates a functional component, so if your `Chores` component already uses `function Chores()` there is nothing to convert — skip directly to fetching the data below.)_
 
-   Next we have to go fetch the data. As discussed in class, we need to handle the CSRF tag using the `api` components provided, so let's import what we need at the top of the page, after importing React: `import { get } from "../api";`
+   We have to go fetch the data. As discussed in class, we need to handle the CSRF tag using the `api` components provided, so let's import what we need at the top of the page, after importing React: `import { get } from "../api";`
 
    Now we can get the data with the following. We are using [useEffect](https://react.dev/reference/react/useEffect) as a React hook that is used to syncronize a component with an external system.
 
@@ -173,7 +175,7 @@ To make this happen, start with the following:
 
    React.useEffect(() => {
      get("/v1/chores").then((response) => {
-       React.setChores(response.data);
+       setChores(response.data);
      });
    }, []);
    ```
@@ -183,7 +185,7 @@ To make this happen, start with the following:
    ```js
    {
      chores.map((chore) => (
-       <tr key={`chore-${chore.attributes.id}`}>
+       <tr key={`chore-${chore.id}`}>
          <td>{chore.attributes.child_name}</td>
          <td>{chore.attributes.task_name}</td>
          <td>{FormattedDate(chore.attributes.due_on)}</td>
@@ -193,7 +195,13 @@ To make this happen, start with the following:
    }
    ```
 
-   Run the server and see the page is displayed. Wait! Those dates are a mess. Luckily, we have a component to format dates. Since this was discussed in class when reviewing the phase starter code, we want you to apply this now in the same way. Your page should look something like:
+   Run the server and see the page is displayed. Wait! Those dates are a mess. Luckily, we have a component to format dates. Add the following import to the top of `Chores.js`:
+
+   ```js
+   import FormattedDate from "./FormattedDate";
+   ```
+
+   Then update the date cell in the `map` to call `{FormattedDate(chore.attributes.due_on)}` as shown in the code above. Your page should look something like:
 
    ![](https://i.imgur.com/kprLuDO.png)
 
@@ -207,7 +215,7 @@ To make this happen, start with the following:
 
 Some of the chores listed are complete and others pending, but it would be nice to mark off completed chores right from the list. To do that, we will need to clean up the code above. It'd be nice if each row in our table was its own component. To do this, check out a new Git branch called 'refactor' so if we hose this, we can easily move back to our 'dev' branch and try again.
 
-1. create a `ChoreItem` component. This component is pretty simple and basically moving code over from our previous component. We are going to import [useState](https://react.dev/reference/react/useState) directly so I don't always have to write `Refactor.useState()`; import with the command `import { useState } from 'react';` and then add:
+1. Create a new file at `app/javascript/components/ChoreItem.js` for the `ChoreItem` component. This component is pretty simple and basically moving code over from our previous component. We are going to import [useState](https://react.dev/reference/react/useState) directly so I don't always have to write `React.useState()`; import with the command `import { useState } from 'react';` and then add:
 
    ```js
    function ChoreItem({ chore, choreId }) {
@@ -226,18 +234,33 @@ Some of the chores listed are complete and others pending, but it would be nice 
    }
    ```
 
-   Of course, you will have to make some other adjustments (like importing `FormattedDate` here) and be sure to mark this function as `export default`.
+   You will also need these imports at the top of the file:
+
+   ```js
+   import React from "react";
+   import { useState } from "react";
+   import FormattedDate from "./FormattedDate";
+   ```
+
+   And be sure to add `export default ChoreItem;` at the bottom of the file.
 
 1. Now we go get to eliminate a lot of code on the main `Chores` component, replacing our loop with the following:
 
    ```js
    {
-     chores.map((chore) => <ChoreItem chore={chore} choreId={chore.id} />);
+     chores.map((chore) => (
+       <ChoreItem key={`chore-${chore.id}`} chore={chore} choreId={chore.id} />
+     ));
    }
    ```
 
-1. We want the final column to be buttons that if we push them, they will toggle between status of complete/pending. To do that, we need the following:
+   Don't forget to add the import at the top of `Chores.js`:
 
+   ```js
+   import ChoreItem from "./ChoreItem";
+   ```
+
+1. We want the final column to be buttons that if we push them, they will toggle between status of complete/pending. To do that, we need the following:
    - a model method that will handle the toggling in the database
    - a controller action that will utilize this
    - an API route to invoke that controller action
@@ -264,7 +287,7 @@ Some of the chores listed are complete and others pending, but it would be nice 
    end
    ```
 
-   And here's the API route you need to invoke it:
+   And here's the API route you need to invoke it (add it **inside the `namespace :v1` block** in `config/routes.rb`):
 
    ```ruby
    put 'chores/:id/toggle_status', to: 'chores#toggle_status'
@@ -276,7 +299,7 @@ Some of the chores listed are complete and others pending, but it would be nice 
 
    Really, this is a hedge. (_Definitely not ninjas in a clever disguise._) Move along.
 
-1. We have the groundwork laid, but need to update our `ChoreItem` component by making the last column a button to toggle the status. To do that, we'll create a new component called `StatusButton` -- you can do that manually or use the generator. Here's a start:
+1. We have the groundwork laid, but need to update our `ChoreItem` component by making the last column a button to toggle the status. To do that, we'll create a new component called `StatusButton` — create it at `app/javascript/components/StatusButton.js` (or use the generator). Here's a start:
 
    ```js
    function StatusButton({ choreId, status }) {
@@ -292,11 +315,17 @@ Some of the chores listed are complete and others pending, but it would be nice 
 
    ```js
    <td>
-     <StatusButton choreId={choreId} status={choreData.status} />
+     <StatusButton choreId={choreId} status={thisChore.status} />
    </td>
    ```
 
-   And you will need to import the `StatusButton` component. Running this will give you a button with the status displayed, but pressing it does nothing. Bummer.
+   Add the following import at the top of `ChoreItem.js`:
+
+   ```js
+   import StatusButton from "./StatusButton";
+   ```
+
+   Running this will give you a button with the status displayed, but pressing it does nothing. Bummer.
 
 1. What we need is to activate the `onClick` handler, so it will respond to the button press. We can write a method called `toggleStatus()` which utilizes the API endpoint we created to update the database and then update our component. Try this out yourself, but if you need it, there is a solution below.
 
@@ -328,7 +357,7 @@ Some of the chores listed are complete and others pending, but it would be nice 
 
 ---
 
-**STOP**: Show a TA that the chores in the Chores component can update their status, toogling between completed and pending.
+**STOP**: Show a TA that the chores in the Chores component can update their status, toggling between completed and pending.
 
 ---
 
@@ -336,7 +365,7 @@ Some of the chores listed are complete and others pending, but it would be nice 
 
 Adding chores is not complicated and something I could and should be able to do within this `Chores` component. Moreover, as I will not be leaving the page, I reduce confusion and cognitive load and can easily see a list of the chores already added.
 
-Following on our theme of "components all the way down", let's start by creating a new component called `ChoreEditor`. This editor is going to need a few API endpoints, specifically with the following routes:
+Following on our theme of "components all the way down", let's start by creating a new component called `ChoreEditor` at `app/javascript/components/ChoreEditor.js`. This editor is going to need a few API endpoints, specifically with the following routes (add them **inside the `namespace :v1` block** in `config/routes.rb`):
 
 ```ruby
 get 'children', to: 'chores#children'  # for select options for children
@@ -372,7 +401,7 @@ Add these routes to `routes.rb` and then create the controller actions and seria
                label: child.attributes.name,
                value: child.id,
              };
-           })
+           }),
          );
        });
        get(`/v1/tasks/`).then((response) => {
@@ -383,7 +412,7 @@ Add these routes to `routes.rb` and then create the controller actions and seria
                label: task.attributes.name,
                value: task.id,
              };
-           })
+           }),
          );
        });
      }, []);
@@ -423,7 +452,13 @@ Add these routes to `routes.rb` and then create the controller actions and seria
 
    And then let's do something similar for Task.
 
-1. It'd be nice if I could actually see this component live, so to do that, return to the `Chores` component. First create some `useState` that will allow us to track whether the editor should be visible with the line `const [isEditing, setIsEditing] = useState(false);` right after setting the chores state.
+1. It'd be nice if I could actually see this component live, so to do that, return to the `Chores` component. Add the following import at the top of `Chores.js`:
+
+   ```js
+   import ChoreEditor from "./ChoreEditor";
+   ```
+
+   Then create some `useState` that will allow us to track whether the editor should be visible with the line `const [isEditing, setIsEditing] = useState(false);` right after setting the chores state.
 
    After that, add the following code after the display of the chores list:
 
