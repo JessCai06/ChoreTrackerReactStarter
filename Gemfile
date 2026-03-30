@@ -5,6 +5,7 @@ ruby '3.4.7'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails', branch: 'main'
 gem 'rails', '8.1.1'
+gem 'connection_pool', '~> 2.4'  # react-rails 3.2.x incompatible with connection_pool 3.x
 
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem 'sprockets-rails'
@@ -15,8 +16,8 @@ gem 'sqlite3', '>= 2.1'
 # Use the Puma web server [https://github.com/puma/puma]
 gem 'puma', '~> 6.0'
 
-# Use dartsass-rails for stylesheets (replaces deprecated sass-rails)
-gem 'dartsass-rails'
+# Use sassc-rails for Sprockets-integrated SCSS compilation
+gem 'sassc-rails'
 
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
 # gem 'importmap-rails'
@@ -46,7 +47,7 @@ gem 'bootsnap', require: false
 gem 'fast_jsonapi', '1.5'
 
 # Other gems
-gem 'validates_timeliness', git: "https://github.com/adzap/validates_timeliness"
+gem 'validates_timeliness', '~> 8.0'
 gem 'time_date_helpers', '0.0.4'
 gem 'cancancan'
 gem 'simple_form'
@@ -66,15 +67,15 @@ group :development, :test do
   gem 'rails-controller-testing'
   gem 'shoulda-context', '~> 2.0.0'
   gem 'shoulda-matchers', '~> 5.0.0'
-  gem 'minitest', '5.16.3'
-  gem 'minitest-rails', '7.0.0'
+  gem 'minitest', '~> 5.20'
+  gem 'minitest-rails', '8.1.0'
   gem 'minitest-reporters', '1.5.0'
   gem 'simplecov'
 
-  gem 'cucumber', '5.3.0'
-  gem 'cucumber-rails', '2.6.1', require: false
-  gem 'database_cleaner', '2.0.1'
-  gem 'launchy', '2.5.0'
+  # gem 'cucumber', '5.3.0'           # incompatible with Ruby 3.2+ (Psych keyword arg change)
+  # gem 'cucumber-rails', '2.6.1', require: false
+  # gem 'database_cleaner', '2.0.1'  # only needed with cucumber
+  # gem 'launchy', '2.5.0'           # only needed with cucumber
 
   gem 'faker'
 end
