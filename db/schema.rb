@@ -10,30 +10,29 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 201230217221709) do
+ActiveRecord::Schema[8.1].define(version: 201230217221709) do
   create_table "children", force: :cascade do |t|
-    t.string "first_name"
-    t.string "last_name"
     t.boolean "active", default: true
     t.datetime "created_at", null: false
+    t.string "first_name"
+    t.string "last_name"
     t.datetime "updated_at", null: false
   end
 
   create_table "chores", force: :cascade do |t|
     t.integer "child_id"
-    t.integer "task_id"
-    t.date "due_on"
     t.boolean "completed", default: false
     t.datetime "created_at", null: false
+    t.date "due_on"
+    t.integer "task_id"
     t.datetime "updated_at", null: false
   end
 
   create_table "tasks", force: :cascade do |t|
-    t.string "name"
-    t.integer "points"
     t.boolean "active", default: true
     t.datetime "created_at", null: false
+    t.string "name"
+    t.integer "points"
     t.datetime "updated_at", null: false
   end
-
 end

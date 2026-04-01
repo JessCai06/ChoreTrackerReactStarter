@@ -10,6 +10,10 @@ gem 'connection_pool', '~> 2.4'  # react-rails 3.2.x incompatible with connectio
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem 'sprockets-rails'
 
+gem "shakapacker", "~> 8.0"
+gem "react-rails", "~> 3.2"
+gem "sassc-rails"     # Sprockets-compatible Sass processor (required for .scss assets)
+
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3', '>= 2.1'
 
