@@ -1,1 +1,20 @@
-<%= react_component("HelloWorld", { greeting: "Hello from react-rails." }) %>
+<div>
+ <h2>Listing chores</h2>
+ <table>
+   <thead>
+     <tr>
+       <th width="125" align="left">
+         Child
+       </th>
+       <th width="200" align="left">
+         Task
+       </th>
+       <th width="75">Due on</th>
+       <th width="75">Status</th>
+     </tr>
+   </thead>
+   <tbody>
+     <%= react_component("Chores") %>
+   </tbody>
+ </table>
+</div>

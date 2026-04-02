@@ -17,4 +17,10 @@ class Chore < ApplicationRecord
   def status
     self.completed ? "Completed" : "Pending"
   end
+
+  def toggle_status
+    self.completed ? self.completed = false : self.completed = true
+    self.save
+    end
+
 end
